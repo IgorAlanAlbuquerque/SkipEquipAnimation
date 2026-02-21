@@ -1,21 +1,10 @@
 #include "log.h"
 #include "hook.h"
-#include "event.h"
 
 void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 {
-    switch (a_msg->type) {
-    case SKSE::MessagingInterface::kDataLoaded:
+    if(a_msg->type == SKSE::MessagingInterface::kDataLoaded) {
         EquipHook::Hook();
-        break;
-    case SKSE::MessagingInterface::kPostLoad:
-        break;
-    case SKSE::MessagingInterface::kPreLoadGame:
-    case SKSE::MessagingInterface::kPostLoadGame:
-    case SKSE::MessagingInterface::kNewGame:
-        if (auto animationEventTracker = AnimationEventTracker::GetSingleton(); animationEventTracker)
-            animationEventTracker->Register();
-        break;
     }
 }
 SKSEPluginLoad(const SKSE::LoadInterface *skse) {

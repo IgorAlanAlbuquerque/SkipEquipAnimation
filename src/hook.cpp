@@ -1,11 +1,64 @@
 #include "hook.h"
-#include "event.h"
 #include "util.h"
+
+#include <atomic>
+#include <cctype>
+#include <chrono>
+#include <string_view>
+
+using namespace std::literals;
 using namespace Util;
+
+namespace
+{
+    static inline std::atomic<std::int64_t> g_skipUntilMs{0};
+    static inline std::atomic<int> g_suppressForceEquipClips{0};
+
+    inline std::int64_t NowMs()
+    {
+        using clock = std::chrono::steady_clock;
+        return std::chrono::duration_cast<std::chrono::milliseconds>(clock::now().time_since_epoch()).count();
+    }
+
+    inline bool InSkipWindow()
+    {
+        return NowMs() <= g_skipUntilMs.load(std::memory_order_relaxed);
+    }
+
+    static bool contains_icase(std::string_view s, std::string_view needle)
+    {
+        if (needle.empty() || s.size() < needle.size())
+            return false;
+
+        for (size_t i = 0; i + needle.size() <= s.size(); ++i)
+        {
+            bool ok = true;
+            for (size_t j = 0; j < needle.size(); ++j)
+            {
+                unsigned char a = (unsigned char)s[i + j];
+                unsigned char b = (unsigned char)needle[j];
+                if (std::tolower(a) != std::tolower(b))
+                {
+                    ok = false;
+                    break;
+                }
+            }
+            if (ok)
+                return true;
+        }
+        return false;
+    }
+
+    static bool IsEquipClip(std::string_view nm)
+    {
+        return contains_icase(nm, "Equip");
+    }
+}
 
 void EquipHook::OnEquipItemPC(RE::PlayerCharacter *a_this, bool a_playAnim)
 {
-    _OnEquipItemPC(a_this, !SkipAnim(a_this, a_playAnim));
+    SkipAnim(a_this, a_playAnim);
+    _OnEquipItemPC(a_this, a_playAnim);
 }
 
 /*
@@ -19,77 +72,80 @@ bool CheckIsValidBoundObject(const RE::TESForm *a_object)
 {
     if (!a_object)
         return false;
-#ifdef WORK_WITH_MAGIC_OBJECTS
     if (a_object->IsMagicItem())
         return true;
-#endif
-
-    return a_object->As<RE::TESObjectWEAP>() != nullptr || a_object->As<RE::TESObjectARMO>() != nullptr; //  && (uint32_t)a_object->As<RE::TESObjectWEAP>()->GetWeaponType() <= 6u)
-}
-
-void SendEquipEvents(RE::Actor *a_this, RE::TESForm *a_lHandObject, RE::TESForm *a_rHandObject, bool changePose)
-{
-    if (!a_this || !AnimationEventTracker::GetSingleton())
-        return;
-
-    auto *tracker = AnimationEventTracker::GetSingleton();
-
-    bool rIsSpell = a_rHandObject && a_rHandObject->IsMagicItem();
-    bool lIsSpell = a_lHandObject && a_lHandObject->IsMagicItem();
-    bool rIsWeapon = a_rHandObject && (a_rHandObject->IsWeapon() || a_rHandObject->IsArmor());
-    bool lIsWeapon = a_lHandObject && (a_lHandObject->IsWeapon() || a_lHandObject->IsArmor());
-
-    bool hasSpell = lIsSpell || rIsSpell;
-    bool hasWeapon = lIsWeapon || rIsWeapon;
-
-    tracker->SendAnimationEvent(a_this, "weaponDraw");
-#ifdef WORK_WITH_MAGIC_OBJECTS
-    if (hasSpell)
-    {
-        tracker->SendAnimationEvent(a_this, "Magic_Equip_Out");
-        tracker->SendAnimationEvent(a_this, "Magic_Equip_OutMoving");
-    }
-#endif
-    if (hasWeapon)
-    {
-        tracker->SendAnimationEvent(a_this, "WeapEquip_Out");
-        tracker->SendAnimationEvent(a_this, "WeapEquip_OutMoving");
-    }
+    return a_object->As<RE::TESObjectWEAP>() != nullptr || a_object->As<RE::TESObjectARMO>() != nullptr;
 }
 
 bool EquipHook::SkipAnim(RE::PlayerCharacter *a_this, bool a_playAnim)
 {
     bool skipAnim = !a_playAnim;
-    if (AnimationEventTracker::GetSingleton()->Register() && a_this && a_this->AsActorState() && a_this->AsActorState()->IsWeaponDrawn())
+    if (a_this && a_this->AsActorState() && a_this->AsActorState()->IsWeaponDrawn())
     {
         auto rHandObj = a_this->GetEquippedObject(false);
         auto lHandObj = a_this->GetEquippedObject(true);
 
         if (!(lHandObj && rHandObj) || CheckIsValidBoundObject(lHandObj) || CheckIsValidBoundObject(rHandObj))
         {
-            int delay = 300;
-            bool skip3D = false;
-            bool changePose = false;
             a_this->GetGraphVariableBool("SkipEquipAnimation", skipAnim);
-            a_this->GetGraphVariableInt("LoadBoundObjectDelay", delay);
-            a_this->GetGraphVariableBool("Skip3DLoading", skip3D);
-            a_this->GetGraphVariableBool("ChangePose", changePose);
-            if (delay < (int)(*g_deltaTimeRealTime * 1000.f))
-                delay = (int)(*g_deltaTimeRealTime * 1000.f); // the loading process will start next frame.
-            if (!skip3D && skipAnim)
+            if (skipAnim)
             {
-                std::jthread delayedEquipThread([=]()
-                                                {
-                    if (skipAnim) {
-                        spdlog::debug("equip anim skipped");
-                        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-                        SendEquipEvents(a_this, lHandObj, rHandObj, changePose);
-                        spdlog::debug("weapon 3d model called");
-                    } });
-                delayedEquipThread.detach();
+                g_skipUntilMs.store(NowMs() + 500, std::memory_order_relaxed);
+                g_suppressForceEquipClips.store(0, std::memory_order_relaxed);
             }
         }
     }
     _skipAnim = skipAnim;
     return skipAnim;
+}
+
+bool EquipHook::NotifyAnimationGraph_Hook(RE::IAnimationGraphManagerHolder *a_this, const RE::BSFixedString &a_event)
+{
+    if (InSkipWindow())
+    {
+        std::string_view ev{a_event.c_str(), a_event.size()};
+        if (IsEquipClip(ev))
+        {
+            g_suppressForceEquipClips.store(1, std::memory_order_relaxed);
+        }
+    }
+
+    return _NotifyAnimationGraph(a_this, a_event);
+}
+
+void EquipHook::Update_Hook(RE::hkbClipGenerator* a_this, const RE::hkbContext& a_context, float a_timestep)
+{
+    if (!a_this) {
+        _Update(a_this, a_context, a_timestep);
+        return;
+    }
+
+    std::string_view nm{ a_this->animationName.c_str() };
+    if (IsEquipClip(nm) && a_this->atEnd) return;
+
+    _Update(a_this, a_context, a_timestep);
+}
+
+void EquipHook::Activate_Hook(RE::hkbClipGenerator* a_this, const RE::hkbContext& a_context)
+{
+    _Activate(a_this, a_context);
+
+    if (!a_this) return;
+
+    const int sup = g_suppressForceEquipClips.load(std::memory_order_relaxed);
+    if (sup <= 0) return;
+
+    std::string_view nm{ a_this->animationName.c_str() };
+    if (!IsEquipClip(nm)) return;
+
+    g_suppressForceEquipClips.store(0, std::memory_order_relaxed);
+
+    float duration = 2.0f;
+    if (a_this->binding && a_this->binding->animation) {
+        duration = a_this->binding->animation->duration;
+    }
+
+    a_this->mode = RE::hkbClipGenerator::PlaybackMode::kModeSinglePlay;
+    _Update(a_this, a_context, duration + 0.01f);
+    a_this->atEnd = true;
 }
