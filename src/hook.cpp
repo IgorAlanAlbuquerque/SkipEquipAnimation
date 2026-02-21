@@ -25,33 +25,9 @@ namespace
         return NowMs() <= g_skipUntilMs.load(std::memory_order_relaxed);
     }
 
-    static bool contains_icase(std::string_view s, std::string_view needle)
-    {
-        if (needle.empty() || s.size() < needle.size())
-            return false;
-
-        for (size_t i = 0; i + needle.size() <= s.size(); ++i)
-        {
-            bool ok = true;
-            for (size_t j = 0; j < needle.size(); ++j)
-            {
-                unsigned char a = (unsigned char)s[i + j];
-                unsigned char b = (unsigned char)needle[j];
-                if (std::tolower(a) != std::tolower(b))
-                {
-                    ok = false;
-                    break;
-                }
-            }
-            if (ok)
-                return true;
-        }
-        return false;
-    }
-
     static bool IsEquipClip(std::string_view nm)
     {
-        return contains_icase(nm, "Equip");
+        return Util::String::iContains(nm, "Equip");
     }
 }
 
