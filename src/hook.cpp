@@ -91,26 +91,12 @@ bool EquipHook::SkipAnim(RE::PlayerCharacter *a_this, bool a_playAnim)
             if (skipAnim)
             {
                 g_skipUntilMs.store(NowMs() + 500, std::memory_order_relaxed);
-                g_suppressForceEquipClips.store(0, std::memory_order_relaxed);
+                g_suppressForceEquipClips.store(1, std::memory_order_relaxed);
             }
         }
     }
     _skipAnim = skipAnim;
     return skipAnim;
-}
-
-bool EquipHook::NotifyAnimationGraph_Hook(RE::IAnimationGraphManagerHolder *a_this, const RE::BSFixedString &a_event)
-{
-    if (InSkipWindow())
-    {
-        std::string_view ev{a_event.c_str(), a_event.size()};
-        if (IsEquipClip(ev))
-        {
-            g_suppressForceEquipClips.store(1, std::memory_order_relaxed);
-        }
-    }
-
-    return _NotifyAnimationGraph(a_this, a_event);
 }
 
 void EquipHook::Update_Hook(RE::hkbClipGenerator* a_this, const RE::hkbContext& a_context, float a_timestep)
