@@ -2,5 +2,6 @@ set(headers ${headers}
 	src/PCH.h 
     src/log.h
     src/util.h
-    src/hook.h 
+    src/hook.h
+    src/event.h 
 )
