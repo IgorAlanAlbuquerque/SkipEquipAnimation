@@ -1,5 +1,6 @@
 #include "log.h"
 #include "hook.h"
+#include "event.h"
 
 void MessageHandler(SKSE::MessagingInterface::Message *a_msg)
 {
