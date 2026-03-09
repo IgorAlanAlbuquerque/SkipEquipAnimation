@@ -132,7 +132,7 @@ void EquipHook::OnEquipItemPC(RE::PlayerCharacter *a_this, bool a_playAnim)
         // normally and attack inputs are unlocked.  Activate_Hook will fast-forward
         // the clip and Generate_Hook will suppress bone movement for that instance.
         g_suppressForceEquipClips.store(1, std::memory_order_relaxed);
-        _OnEquipItemPC(a_this, true);
+        _OnEquipItemPC(a_this, a_playAnim);
         break;
 
     default:
