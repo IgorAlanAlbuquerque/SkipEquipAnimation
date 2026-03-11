@@ -8,6 +8,13 @@
 
     {
         "projectPath": "actors\\Character",
+        "type": "kBool",
+        "name" "InstantEquipAnim",
+        "value": false
+    },
+
+    {
+        "projectPath": "actors\\Character",
         "type": "kInt",
         "name": "LoadBoundObjectDelay",
         "value": 0
