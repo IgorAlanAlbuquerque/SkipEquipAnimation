@@ -60,32 +60,18 @@ static void SendEquipEvents(RE::Actor *a_this,
 
 EquipHook::EquipMode EquipHook::GetEquipMode(RE::PlayerCharacter *a_this, bool a_playAnim)
 {
-    if (!a_playAnim)
-        return EquipMode::Skip;
+    if (a_this)
+    {
+        bool instantAnim = false;
+        a_this->GetGraphVariableBool("InstantEquipAnim", instantAnim);
+        if (instantAnim && a_playAnim)
+            return EquipMode::InstantAnim;
 
-    if (!a_this || !a_this->AsActorState() || !a_this->AsActorState()->IsWeaponDrawn())
-        return EquipMode::Normal;
-
-    auto *rHandObj = a_this->GetEquippedObject(false);
-    auto *lHandObj = a_this->GetEquippedObject(true);
-
-    if ((lHandObj && rHandObj) && !CheckIsValidBoundObject(lHandObj) && !CheckIsValidBoundObject(rHandObj))
-        return EquipMode::Normal;
-
-    // Set this variable from your own mod/Papyrus whenever you want the
-    // equip clip to be driven through the state machine instantly with
-    // zero visual movement (inputs unlocked immediately).
-    bool instantAnim = false;
-    a_this->GetGraphVariableBool("InstantEquipAnim", instantAnim);
-    if (instantAnim)
-        return EquipMode::InstantAnim;
-
-    // Uses playAnim=false so the graph never plays the clip at all.
-    bool skipAnim = false;
-    a_this->GetGraphVariableBool("SkipEquipAnimation", skipAnim);
-    if (skipAnim)
-        return EquipMode::Skip;
-
+        bool skipAnim = false;
+        a_this->GetGraphVariableBool("SkipEquipAnimation", skipAnim);
+        if (skipAnim && a_playAnim)
+            return EquipMode::Skip;
+    }
     return EquipMode::Normal;
 }
 
