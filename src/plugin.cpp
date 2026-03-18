@@ -14,6 +14,7 @@ void MessageHandler(SKSE::MessagingInterface::Message *a_msg)
     case SKSE::MessagingInterface::kPreLoadGame:
     case SKSE::MessagingInterface::kPostLoadGame:
     case SKSE::MessagingInterface::kNewGame:
+        EquipHook::ResetState();
         if (auto animationEventTracker = AnimationEventTracker::GetSingleton(); animationEventTracker)
             animationEventTracker->Register();
         break;

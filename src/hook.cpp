@@ -12,14 +12,19 @@ using namespace Util;
 
 namespace
 {
+    static inline std::vector<RE::hkbClipGenerator *> g_pendingClips;
+    static inline std::vector<RE::hkbClipGenerator *> g_suppressedClips;
     static inline std::atomic<int> g_suppressForceEquipClips{0};
-
-    // The specific hkbClipGenerator instance being suppressed on the SkipInstant path
-    static inline std::atomic<RE::hkbClipGenerator *> g_suppressedClip{nullptr};
+    static inline RE::hkbCharacter *g_playerHkbCharacter{nullptr};
 
     static bool IsEquipClip(std::string_view nm)
     {
         return Util::String::iContains(nm, "Equip");
+    }
+
+    static bool IsPlayerClip(const RE::hkbContext &a_context)
+    {
+        return a_context.character == g_playerHkbCharacter;
     }
 }
 
@@ -47,7 +52,8 @@ static void SendEquipEvents(RE::Actor *a_this,
 
     tracker->SendAnimationEvent(a_this, "weaponDraw");
 
-    if ((a_lHandObject && (a_lHandObject->IsWeapon() || a_lHandObject->IsArmor())) || (a_rHandObject && (a_rHandObject->IsWeapon() || a_rHandObject->IsArmor())))
+    if ((a_lHandObject && (a_lHandObject->IsWeapon() || a_lHandObject->IsArmor())) ||
+        (a_rHandObject && (a_rHandObject->IsWeapon() || a_rHandObject->IsArmor())))
     {
         tracker->SendAnimationEvent(a_this, "WeapEquip_Out");
         tracker->SendAnimationEvent(a_this, "WeapEquip_OutMoving");
@@ -85,8 +91,6 @@ void EquipHook::OnEquipItemPC(RE::PlayerCharacter *a_this, bool a_playAnim)
     {
     case EquipMode::Skip:
     {
-        // Original mod path: suppress the animation entirely by passing false.
-        // Then send the weapon-ready events after a short delay so the 3-D model
         auto *tracker = AnimationEventTracker::GetSingleton();
         tracker->Register();
 
@@ -114,12 +118,16 @@ void EquipHook::OnEquipItemPC(RE::PlayerCharacter *a_this, bool a_playAnim)
     }
 
     case EquipMode::InstantAnim:
-        // New path: let the graph run (playAnim=true) so state transitions happen
-        // normally and attack inputs are unlocked.  Activate_Hook will fast-forward
-        // the clip and Generate_Hook will suppress bone movement for that instance.
+    {
+        RE::BSAnimationGraphManagerPtr graphManager;
+        a_this->GetAnimationGraphManager(graphManager);
+        if (graphManager && !graphManager->graphs.empty())
+            g_playerHkbCharacter = &graphManager->graphs[0]->characterInstance;
+
         g_suppressForceEquipClips.store(1, std::memory_order_relaxed);
         _OnEquipItemPC(a_this, a_playAnim);
         break;
+    }
 
     default:
         _OnEquipItemPC(a_this, a_playAnim);
@@ -130,65 +138,79 @@ void EquipHook::OnEquipItemPC(RE::PlayerCharacter *a_this, bool a_playAnim)
 // ---------------------------------------------------------------------------
 // Vtable hooks: hkbClipGenerator
 // ---------------------------------------------------------------------------
-
 void EquipHook::Activate_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext &a_context)
 {
     _Activate(a_this, a_context);
 
-    if (!a_this)
-        return;
-    if (g_suppressForceEquipClips.load(std::memory_order_relaxed) <= 0)
+    if (!a_this || !IsPlayerClip(a_context))
         return;
 
-    std::string_view nm{a_this->animationName.c_str()};
-    if (!IsEquipClip(nm))
+    if (g_suppressForceEquipClips.load(std::memory_order_relaxed) <= 0 ||
+        !IsEquipClip(std::string_view{a_this->animationName.c_str()}))
         return;
 
-    // Consume the flag immediately so only this specific clip instance is marked
-    g_suppressForceEquipClips.store(0, std::memory_order_relaxed);
-    g_suppressedClip.store(a_this, std::memory_order_relaxed);
-
-    // Fast-forward the clip so the state machine transitions to "equip done" right
-    // now, unlocking attack inputs.
-    float duration = 2.0f;
-    if (a_this->binding && a_this->binding->animation)
-        duration = a_this->binding->animation->duration;
-
-    a_this->mode = RE::hkbClipGenerator::PlaybackMode::kModeSinglePlay;
-    _Update(a_this, a_context, duration + 0.01f);
-    a_this->atEnd = true;
+    g_pendingClips.push_back(a_this);
 }
 
 void EquipHook::Update_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext &a_context, float a_timestep)
 {
-    if (!a_this)
+    if (a_this)
     {
-        _Update(a_this, a_context, a_timestep);
-        return;
-    }
 
-    // Suppress continued updates for the fast-forwarded clip.
-    // The graph will call Deactivate naturally when it transitions away.
-    if (a_this == g_suppressedClip.load(std::memory_order_relaxed) && a_this->atEnd)
-        return;
+        for (auto *clip : g_suppressedClips)
+            if (clip == a_this && a_this->atEnd)
+                return;
+
+        auto it = std::find(g_pendingClips.begin(), g_pendingClips.end(), a_this);
+        if (it != g_pendingClips.end())
+        {
+            g_pendingClips.erase(it);
+
+            float duration = 2.0f;
+            if (a_this->binding && a_this->binding->animation)
+                duration = a_this->binding->animation->duration;
+            a_this->mode = RE::hkbClipGenerator::PlaybackMode::kModeSinglePlay;
+
+            _Update(a_this, a_context, duration + 0.01f);
+
+            a_this->atEnd = true;
+            g_suppressedClips.push_back(a_this);
+            return;
+        }
+    }
 
     _Update(a_this, a_context, a_timestep);
 }
 
 void EquipHook::Deactivate_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext &a_context)
 {
-    // Release the suppressed-instance pointer when the graph is done with the clip.
-    if (a_this == g_suppressedClip.load(std::memory_order_relaxed))
-        g_suppressedClip.store(nullptr, std::memory_order_relaxed);
+    bool wasInAnyList = false;
+
+    auto it = std::find(g_pendingClips.begin(), g_pendingClips.end(), a_this);
+    if (it != g_pendingClips.end())
+    {
+        g_pendingClips.erase(it);
+        wasInAnyList = true;
+    }
+
+    auto it2 = std::find(g_suppressedClips.begin(), g_suppressedClips.end(), a_this);
+    if (it2 != g_suppressedClips.end())
+    {
+        g_suppressedClips.erase(it2);
+        wasInAnyList = true;
+    }
+
+    if (wasInAnyList && g_suppressedClips.empty() && g_pendingClips.empty())
+        g_suppressForceEquipClips.store(0, std::memory_order_relaxed);
 
     _Deactivate(a_this, a_context);
 }
 
-void EquipHook::Generate_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext &a_context)
+void EquipHook::ResetState()
 {
-    // Produce no bone transforms for the suppressed clip
-    if (a_this == g_suppressedClip.load(std::memory_order_relaxed))
-        return;
+    g_pendingClips.clear();
+    g_suppressedClips.clear();
+    g_suppressForceEquipClips.store(0, std::memory_order_relaxed);
 
-    _Generate(a_this, a_context);
+    g_playerHkbCharacter = nullptr;
 }

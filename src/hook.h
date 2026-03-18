@@ -13,8 +13,8 @@ public:
         _Activate = vtbl.write_vfunc(0x04, Activate_Hook);
         _Update = vtbl.write_vfunc(0x05, Update_Hook);
         _Deactivate = vtbl.write_vfunc(0x07, Deactivate_Hook);
-        _Generate = vtbl.write_vfunc(0x17, Generate_Hook);
     }
+    static void ResetState();
 
 private:
     enum class EquipMode
@@ -28,7 +28,6 @@ private:
     static void Activate_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext &a_context);
     static void Update_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext &a_context, float a_timestep);
     static void Deactivate_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext &a_context);
-    static void Generate_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext &a_context);
 
     static EquipMode GetEquipMode(RE::PlayerCharacter *a_this, bool a_playAnim);
 
@@ -36,5 +35,4 @@ private:
     static inline REL::Relocation<decltype(Activate_Hook)> _Activate;
     static inline REL::Relocation<decltype(Update_Hook)> _Update;
     static inline REL::Relocation<decltype(Deactivate_Hook)> _Deactivate;
-    static inline REL::Relocation<decltype(Generate_Hook)> _Generate;
 };
