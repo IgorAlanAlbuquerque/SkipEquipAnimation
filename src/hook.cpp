@@ -14,17 +14,21 @@ namespace
 {
     static inline std::vector<RE::hkbClipGenerator *> g_pendingClips;
     static inline std::vector<RE::hkbClipGenerator *> g_suppressedClips;
-    static inline std::atomic<int> g_suppressForceEquipClips{0};
-    static inline RE::hkbCharacter *g_playerHkbCharacter{nullptr};
 
     static bool IsEquipClip(std::string_view nm)
     {
         return Util::String::iContains(nm, "Equip");
     }
 
-    static bool IsPlayerClip(const RE::hkbContext &a_context)
+    RE::Actor *GetActorFromContext(const RE::hkbContext &a_context)
     {
-        return a_context.character == g_playerHkbCharacter;
+        if (!a_context.character)
+            return nullptr;
+
+        const auto *graph = reinterpret_cast<const RE::BShkbAnimationGraph *>(
+            reinterpret_cast<const std::byte *>(a_context.character) - 0xC0);
+
+        return graph->holder;
     }
 }
 
@@ -119,12 +123,6 @@ void EquipHook::OnEquipItemPC(RE::PlayerCharacter *a_this, bool a_playAnim)
 
     case EquipMode::InstantAnim:
     {
-        RE::BSAnimationGraphManagerPtr graphManager;
-        a_this->GetAnimationGraphManager(graphManager);
-        if (graphManager && !graphManager->graphs.empty())
-            g_playerHkbCharacter = &graphManager->graphs[0]->characterInstance;
-
-        g_suppressForceEquipClips.store(1, std::memory_order_relaxed);
         _OnEquipItemPC(a_this, a_playAnim);
         break;
     }
@@ -142,11 +140,19 @@ void EquipHook::Activate_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext
 {
     _Activate(a_this, a_context);
 
-    if (!a_this || !IsPlayerClip(a_context))
+    if (!a_this)
         return;
 
-    if (g_suppressForceEquipClips.load(std::memory_order_relaxed) <= 0 ||
-        !IsEquipClip(std::string_view{a_this->animationName.c_str()}))
+    auto *player = RE::PlayerCharacter::GetSingleton();
+    if (GetActorFromContext(a_context) != player)
+        return;
+
+    if (!IsEquipClip(std::string_view{a_this->animationName.c_str()}))
+        return;
+
+    bool instantAnim = false;
+    player->GetGraphVariableBool("InstantEquipAnim", instantAnim);
+    if (!instantAnim)
         return;
 
     g_pendingClips.push_back(a_this);
@@ -200,9 +206,6 @@ void EquipHook::Deactivate_Hook(RE::hkbClipGenerator *a_this, const RE::hkbConte
         wasInAnyList = true;
     }
 
-    if (wasInAnyList && g_suppressedClips.empty() && g_pendingClips.empty())
-        g_suppressForceEquipClips.store(0, std::memory_order_relaxed);
-
     _Deactivate(a_this, a_context);
 }
 
@@ -210,7 +213,4 @@ void EquipHook::ResetState()
 {
     g_pendingClips.clear();
     g_suppressedClips.clear();
-    g_suppressForceEquipClips.store(0, std::memory_order_relaxed);
-
-    g_playerHkbCharacter = nullptr;
 }
