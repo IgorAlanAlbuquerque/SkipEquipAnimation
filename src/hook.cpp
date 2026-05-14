@@ -15,7 +15,7 @@ namespace
     static inline std::vector<RE::hkbClipGenerator *> g_pendingClips;
     static inline std::vector<RE::hkbClipGenerator *> g_suppressedClips;
 
-    static bool IsEquipClip(std::string_view nm)
+    bool IsEquipClip(std::string_view nm)
     {
         return Util::String::iContains(nm, "Equip");
     }
@@ -47,8 +47,8 @@ static bool CheckIsValidBoundObject(const RE::TESForm *a_object)
 
 // Sends the animation events that normally fire at the end of an equip animation.
 static void SendEquipEvents(RE::Actor *a_this,
-                            RE::TESForm *a_lHandObject,
-                            RE::TESForm *a_rHandObject)
+                            RE::TESForm const *a_lHandObject,
+                            RE::TESForm const *a_rHandObject)
 {
     auto *tracker = AnimationEventTracker::GetSingleton();
     if (!tracker)
@@ -68,21 +68,22 @@ static void SendEquipEvents(RE::Actor *a_this,
 // Mode detection
 // ---------------------------------------------------------------------------
 
-EquipHook::EquipMode EquipHook::GetEquipMode(RE::PlayerCharacter *a_this, bool a_playAnim)
+EquipHook::EquipMode EquipHook::GetEquipMode(const RE::PlayerCharacter *a_this, bool a_playAnim)
 {
+    using enum EquipHook::EquipMode;
     if (a_this)
     {
         bool instantAnim = false;
         a_this->GetGraphVariableBool("InstantEquipAnim", instantAnim);
         if (instantAnim && a_playAnim)
-            return EquipMode::InstantAnim;
+            return InstantAnim;
 
         bool skipAnim = false;
         a_this->GetGraphVariableBool("SkipEquipAnimation", skipAnim);
         if (skipAnim && a_playAnim)
-            return EquipMode::Skip;
+            return Skip;
     }
-    return EquipMode::Normal;
+    return Normal;
 }
 
 // ---------------------------------------------------------------------------
@@ -98,8 +99,8 @@ void EquipHook::OnEquipItemPC(RE::PlayerCharacter *a_this, bool a_playAnim)
         auto *tracker = AnimationEventTracker::GetSingleton();
         tracker->Register();
 
-        auto *rHandObj = a_this->GetEquippedObject(false);
-        auto *lHandObj = a_this->GetEquippedObject(true);
+        auto const *rHandObj = a_this->GetEquippedObject(false);
+        auto const *lHandObj = a_this->GetEquippedObject(true);
 
         int delay = 300;
         bool skip3D = false;
@@ -143,11 +144,11 @@ void EquipHook::Activate_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext
     if (!a_this)
         return;
 
-    auto *player = RE::PlayerCharacter::GetSingleton();
+    auto const *player = RE::PlayerCharacter::GetSingleton();
     if (GetActorFromContext(a_context) != player)
         return;
 
-    if (!IsEquipClip(std::string_view{a_this->animationName.c_str()}))
+    if (const std::string_view name{a_this->animationName.c_str()}; !IsEquipClip(name))
         return;
 
     bool instantAnim = false;
@@ -162,24 +163,36 @@ void EquipHook::Update_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext &
 {
     if (a_this)
     {
+        for (auto const *clip : g_suppressedClips)
+        {
+            if (clip == a_this)
+            {
+                if (a_this->atEnd)
+                    return;
 
-        for (auto *clip : g_suppressedClips)
-            if (clip == a_this && a_this->atEnd)
+                float duration = 2.0f;
+                if (a_this->binding && a_this->binding->animation)
+                    duration = a_this->binding->animation->duration;
+
+                a_this->mode = RE::hkbClipGenerator::PlaybackMode::kModeSinglePlay;
+                _Update(a_this, a_context, duration + 0.01f);
+                a_this->atEnd = true;
                 return;
+            }
+        }
 
-        auto it = std::find(g_pendingClips.begin(), g_pendingClips.end(), a_this);
-        if (it != g_pendingClips.end())
+        if (auto it = std::ranges::find(g_pendingClips, a_this); it != g_pendingClips.end())
         {
             g_pendingClips.erase(it);
 
             float duration = 2.0f;
             if (a_this->binding && a_this->binding->animation)
                 duration = a_this->binding->animation->duration;
+
             a_this->mode = RE::hkbClipGenerator::PlaybackMode::kModeSinglePlay;
-
             _Update(a_this, a_context, duration + 0.01f);
-
             a_this->atEnd = true;
+
             g_suppressedClips.push_back(a_this);
             return;
         }
@@ -190,20 +203,16 @@ void EquipHook::Update_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext &
 
 void EquipHook::Deactivate_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext &a_context)
 {
-    bool wasInAnyList = false;
-
-    auto it = std::find(g_pendingClips.begin(), g_pendingClips.end(), a_this);
-    if (it != g_pendingClips.end())
-    {
+    if (auto it = std::ranges::find(g_pendingClips, a_this); it != g_pendingClips.end())
         g_pendingClips.erase(it);
-        wasInAnyList = true;
-    }
 
-    auto it2 = std::find(g_suppressedClips.begin(), g_suppressedClips.end(), a_this);
-    if (it2 != g_suppressedClips.end())
-    {
+    if (auto it2 = std::ranges::find(g_suppressedClips, a_this); it2 != g_suppressedClips.end())
         g_suppressedClips.erase(it2);
-        wasInAnyList = true;
+
+    if (!a_this)
+    {
+        _Deactivate(a_this, a_context);
+        return;
     }
 
     _Deactivate(a_this, a_context);

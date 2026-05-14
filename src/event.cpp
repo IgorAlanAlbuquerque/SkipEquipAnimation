@@ -29,6 +29,8 @@ bool AnimationEventTracker::Register()
         if (!eventSource)
         {
             spdlog::info("Failed to register {}", typeid(RE::BSAnimationGraphEvent).name());
+        }else{
+            spdlog::info("Event Source registered {}", typeid(RE::BSAnimationGraphEvent).name());
         }
     }
     return foundEventSource;

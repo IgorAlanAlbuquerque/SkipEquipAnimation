@@ -29,7 +29,7 @@ private:
     static void Update_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext &a_context, float a_timestep);
     static void Deactivate_Hook(RE::hkbClipGenerator *a_this, const RE::hkbContext &a_context);
 
-    static EquipMode GetEquipMode(RE::PlayerCharacter *a_this, bool a_playAnim);
+    static EquipMode GetEquipMode(const RE::PlayerCharacter *a_this, bool a_playAnim);
 
     static inline REL::Relocation<decltype(OnEquipItemPC)> _OnEquipItemPC;
     static inline REL::Relocation<decltype(Activate_Hook)> _Activate;
