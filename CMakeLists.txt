@@ -97,3 +97,10 @@ if(DEFINED OUTPUT_FOLDER)
         )
     endif()
 endif()
+
+if(MSVC)
+    target_link_options(${PROJECT_NAME} PRIVATE
+        $<$<CONFIG:Release>:/OPT:REF>
+        $<$<CONFIG:RelWithDebInfo>:/OPT:REF>
+    )
+endif()
