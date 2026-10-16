@@ -499,7 +499,7 @@ namespace ObjectUtil
                         if (auto eventSource = animationGraph->GetEventSource<RE::BSAnimationGraphEvent>(); eventSource)
                         {
                             RE::BSAnimationGraphEvent event = {a_tag, a_this, a_payload};
-                            a_this->ProcessEvent(&event, eventSource);
+                            eventSource->SendEvent(&event);
                             break;
                         }
                     }
@@ -673,7 +673,7 @@ namespace ObjectUtil
                 const auto av = a_isLeft ? RE::ActorValue::kLeftItemCharge : RE::ActorValue::kRightItemCharge;
                 const float sum = a_charge + a_actor->AsActorValueOwner()->GetActorValue(av);
                 const float charge = sum >= maxCharge ? maxCharge : sum;
-                a_actor->AsActorValueOwner()->ModActorValue(av, charge);
+                a_actor->AsActorValueOwner()->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, charge);
             }
         }
         static void ChargeInventoryWeapon(RE::Actor *a_actor, RE::FormID a_weapID, const float a_charge)
@@ -891,22 +891,6 @@ namespace ObjectUtil
         }
     };
 
-    struct Sound
-    {
-        static void PlaySound(RE::BGSSoundDescriptorForm *a_sound, RE::NiAVObject *a_source, const float a_volume = 1.f)
-        {
-            if (a_sound && a_source)
-            {
-                auto audioManager = RE::BSAudioManager::GetSingleton();
-                BSSoundHandle handle;
-                audioManager->BuildSoundDataFromDescriptor(handle, a_sound->soundDescriptor);
-                handle.SetObjectToFollow(a_source);
-                handle.SetVolume(a_volume);
-                handle.Play();
-            }
-        }
-    };
-
     struct Transform
     {
         static void TranslateTo(RE::BSScript::IVirtualMachine *vm, RE::VMStackID stackID, RE::TESObjectREFR *object, float afX, float afY, float afZ, float afAngleX, float afAngleY, float afAngleZ, float afSpeed, float afMaxRotationSpeed)
@@ -1104,61 +1088,6 @@ namespace NifUtil
                 node->AttachChild(obj, true);
                 SKSE::log::info("Object Attached");
             }
-        }
-    };
-    struct Collision
-    {
-        static bool ToggleMeshCollision(RE::NiAVObject *root, RE::bhkWorld *world, bool collisionState)
-        {
-            constexpr auto no_collision_flag = static_cast<std::uint32_t>(RE::CFilter::Flag::kNoCollision);
-            if (root && world)
-            {
-
-                RE::BSWriteLockGuard locker(world->worldLock);
-
-                RE::BSVisit::TraverseScenegraphCollision(root, [&](RE::bhkNiCollisionObject *a_col) -> RE::BSVisit::BSVisitControl
-                                                         {
-                                if (auto hkpBody = a_col->body ? static_cast<RE::hkpWorldObject*>(a_col->body->referencedObject.get()) : nullptr; hkpBody) {
-                                    auto& filter = hkpBody->collidable.broadPhaseHandle.collisionFilterInfo;
-                                    if (!collisionState) {
-                                        filter |= no_collision_flag;
-                                    } else {
-                                        filter &= ~no_collision_flag;
-                                    }
-                                }
-                                return RE::BSVisit::BSVisitControl::kContinue; });
-            }
-            else
-            {
-                return false;
-            }
-            return true;
-        }
-        static bool RemoveMeshCollision(RE::NiAVObject *root, RE::bhkWorld *world, bool collisionState)
-        {
-            constexpr auto no_collision_flag = static_cast<std::uint32_t>(RE::CFilter::Flag::kNoCollision);
-            if (root && world)
-            {
-
-                RE::BSWriteLockGuard locker(world->worldLock);
-
-                RE::BSVisit::TraverseScenegraphCollision(root, [&](RE::bhkNiCollisionObject *a_col) -> RE::BSVisit::BSVisitControl
-                                                         {
-                                if (auto hkpBody = a_col->body ? static_cast<RE::hkpWorldObject*>(a_col->body->referencedObject.get()) : nullptr; hkpBody) {
-                                    auto& filter = hkpBody->collidable.broadPhaseHandle.collisionFilterInfo;
-                                    if (!collisionState) {
-                                        filter |= no_collision_flag;
-                                    } else {
-                                        filter &= ~no_collision_flag;
-                                    }
-                                }
-                                return RE::BSVisit::BSVisitControl::kContinue; });
-            }
-            else
-            {
-                return false;
-            }
-            return true;
         }
     };
 }

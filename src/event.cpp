@@ -41,6 +41,6 @@ void AnimationEventTracker::SendAnimationEvent(RE::Actor *a_this, const RE::BSFi
     if (a_this && eventSource)
     {
         RE::BSAnimationGraphEvent event = {a_tag, a_this, a_payload};
-        a_this->ProcessEvent(&event, eventSource);
+        eventSource->SendEvent(&event);
     }
 }

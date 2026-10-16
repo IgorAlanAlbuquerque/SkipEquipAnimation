@@ -1,10 +1,13 @@
 {
-    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-    "name": "hello-world",
-    "version-string": "0.0.1",
+    "name": "convenient-slow-motion",
+    "version-string": "1.0.1",
     "dependencies": [
-        "commonlibsse-ng",
+        "directxtk",
+        "fmt",
+        "nlohmann-json",
+        "rapidcsv",
         "simpleini",
-        "nlohmann-json"
+        "spdlog",
+        "xbyak"
     ]
 }

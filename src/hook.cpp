@@ -2,11 +2,6 @@
 #include "event.h"
 #include "util.h"
 
-#include <atomic>
-#include <chrono>
-#include <string_view>
-#include <thread>
-
 using namespace std::literals;
 using namespace Util;
 
@@ -148,7 +143,7 @@ void EquipHook::OnEquipItemPC(RE::PlayerCharacter *a_this, bool a_playAnim)
         auto const *rHandObj = a_this->GetEquippedObject(false);
         auto const *lHandObj = a_this->GetEquippedObject(true);
 
-        int delay = 300;
+        int delay = 33;
         bool skip3D = false;
         a_this->GetGraphVariableInt("LoadBoundObjectDelay", delay);
         a_this->GetGraphVariableBool("Skip3DLoading", skip3D);

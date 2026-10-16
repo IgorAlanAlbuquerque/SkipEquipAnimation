@@ -18,11 +18,17 @@
 
     If you want equip animations to be skipped by default: Simply open the 'SKSE\Plugins\BehaviorDataInjector\SkipEquipAnimation_BDI.json' and set the 'SkipEquipAnimation' variable's value to true.
 
+  - Compatible with 1.5.97 - 1.6.x - 1.7.x game versions.
+
+  - [NexusMods Page](https://www.nexusmods.com/skyrimspecialedition/mods/120926)
+
 # CommonLibSSE NG
 
-Because this uses [CommonLibSSE NG](https://github.com/CharmedBaryon/CommonLibSSE-NG), it supports Skyrim SE, AE, GOG, and VR. 
+Because this uses [CommonLibSSE NG](https://github.com/alandtse/CommonLibSSE-NG), it supports Skyrim SE, AE, GOG, and VR. 
 
 Hook IDs and offsets must still be found manually for each version.
+
+- Set the `CommonLibSSEPath_NG` environment variable to the path of your CommonlibSSE-NG folder. 
 
 # Requirements
 
@@ -39,10 +45,6 @@ Hook IDs and offsets must still be found manually for each version.
 
 Once you have Visual Studio 2022 installed, you can open this folder in basically any C++ editor, e.g. [VS Code](https://code.visualstudio.com/) or [CLion](https://www.jetbrains.com/clion/) or [Visual Studio](https://visualstudio.microsoft.com/)
 - > _for VS Code, if you are not automatically prompted to install the [C++](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) and [CMake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) extensions, please install those and then close VS Code and then open this project as a folder in VS Code_
-
-You may need to click `OK` on a few windows, but the project should automatically run CMake!
-
-It will _automatically_ download [CommonLibSSE NG](https://github.com/CharmedBaryon/CommonLibSSE-NG) and everything you need to get started making your new plugin!
 
 # Project setup
 
@@ -88,3 +90,10 @@ For VSCode users, they must have a `launch.json` file like the one below:
     ]
 }
 ```
+
+## Credits
+* [CharmedBayron](https://github.com/CharmedBaryon/CommonLibSSE-NG),
+[Ryan McKenzie](https://github.com/Ryan-rsm-McKenzie), [Alan Tse](https://github.com/alandtse) and
+[powerof3](https://github.com/powerof3) for CommonlibSSE-NG.
+* [Mrowr Purr](https://github.com/SkyrimScripting) for his guide videos.
+* [Igor](https://github.com/IgorAlanAlbuquerque) for his improvements of the functionality.

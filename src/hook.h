@@ -7,7 +7,7 @@ public:
     static void Hook()
     {
         REL::Relocation<std::uintptr_t> PlayerCharacterVtbl{RE::VTABLE_PlayerCharacter[0]};
-        REL::Relocation<std::uintptr_t> vtbl{RE::VTABLE_hkbClipGenerator[0]};
+        REL::Relocation<std::uintptr_t> hkbClipGeneratorVtbl{RE::VTABLE_hkbClipGenerator[0]};
 
         // VTABLE_PlayerCharacter[3] = IAnimationGraphManagerHolder vtable
         // (inherited offset 0x38: TESForm[0], BSHandleRefObject[1], BSTEventSink<BSAnimGraphEvent>[2], IAnimationGraphManagerHolder[3])

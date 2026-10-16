@@ -21,6 +21,7 @@
                 "VCPKG_TARGET_TRIPLET": "x64-windows-skse",
                 "VCPKG_HOST_TRIPLET": "x64-windows-skse",
                 "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake",
+
                 "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
             }
         },
@@ -57,13 +58,6 @@
             "environment": {
                 "COMMONLIBSSE_COMPILER": "/permissive- /Zc:preprocessor /EHsc $penv{CXXFLAGS} /MP",
                 "COMMONLIBSSE_TEXT": "-DUNICODE -D_UNICODE"
-            },
-            "vendor": {
-                "microsoft.com/VisualStudioSettings/CMake/1.0": {
-                    "intelliSenseMode": "windows-msvc-x64",
-                    "enableMicrosoftCodeAnalysis": true,
-                    "enableClangTidyCodeAnalysis": true
-                }
             }
         },
         {
@@ -102,7 +96,7 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": {
                     "type": "STRING",
-                    "value": "Release"
+                    "value": "RelWithDebInfo"
                 }
             }
         }
@@ -120,7 +114,5 @@
             "configurePreset": "build-debug-msvc",
             "description": "Debug build for testing."
         }
-    ],
-    "testPresets": [
     ]
 }
