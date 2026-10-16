@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"d:\\\\repositorios\\\\SkipEquipAnimation\" -Recurse -Filter \"*.cpp\" -o File)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(cmake --build build/release-msvc --config Release)",
+      "Bash(cmake --build build/release-msvc --config Release --clean-first)",
+      "Read(//c/Program Files \\(x86\\)/Microsoft Visual Studio/**)",
+      "Bash(cmd /c \"\\\\\"C:\\\\\\\\Program Files\\\\\\\\Microsoft Visual Studio\\\\\\\\18\\\\\\\\Community\\\\\\\\VC\\\\\\\\Auxiliary\\\\\\\\Build\\\\\\\\vcvars64.bat\\\\\" && cmake --build d:/repositorios/SkipEquipAnimation/build/release-msvc 2>&1 | tail -20\")",
+      "Bash(cmd /c \"\\\\\"C:\\\\\\\\Program Files\\\\\\\\Microsoft Visual Studio\\\\\\\\18\\\\\\\\Community\\\\\\\\VC\\\\\\\\Auxiliary\\\\\\\\Build\\\\\\\\vcvars64.bat\\\\\" && cd /d d:\\\\\\\\repositorios\\\\\\\\SkipEquipAnimation && cmake --build build/release-msvc\")",
+      "Bash(cmd /c \"\\\\\"C:\\\\\\\\Program Files\\\\\\\\Microsoft Visual Studio\\\\\\\\18\\\\\\\\Community\\\\\\\\VC\\\\\\\\Auxiliary\\\\\\\\Build\\\\\\\\vcvars64.bat\\\\\" && cmake --build \\\\\"d:/repositorios/SkipEquipAnimation/build/release-msvc\\\\\"\")",
+      "Bash(cmd /c \"\\\\\"C:\\\\\\\\Program Files\\\\\\\\Microsoft Visual Studio\\\\\\\\18\\\\\\\\Community\\\\\\\\VC\\\\\\\\Auxiliary\\\\\\\\Build\\\\\\\\vcvars64.bat\\\\\" && cmake --build d:\\\\\\\\repositorios\\\\\\\\SkipEquipAnimation\\\\\\\\build\\\\\\\\release-msvc\")",
+      "Bash(cmd /c \"\\\\\"C:\\\\\\\\Program Files\\\\\\\\Microsoft Visual Studio\\\\\\\\18\\\\\\\\Community\\\\\\\\VC\\\\\\\\Auxiliary\\\\\\\\Build\\\\\\\\vcvars64.bat\\\\\" 2>nul && cmake --build d:\\\\\\\\repositorios\\\\\\\\SkipEquipAnimation\\\\\\\\build\\\\\\\\release-msvc 2>&1\")",
+      "Bash(cmd /c \"d:\\\\\\\\repositorios\\\\\\\\SkipEquipAnimation\\\\\\\\build_temp.bat\")"
+    ]
+  }
+}

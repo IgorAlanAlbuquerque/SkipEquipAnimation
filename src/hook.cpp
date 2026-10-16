@@ -10,6 +10,12 @@
 using namespace std::literals;
 using namespace Util;
 
+// ---------------------------------------------------------------------------
+// Investigation: equip ID counter – correlates pre/post variable logs with
+// NotifyAnimationGraph events in the same equip cycle.
+// ---------------------------------------------------------------------------
+static std::atomic<int> g_equipId{0};
+
 namespace
 {
     static inline std::vector<RE::hkbClipGenerator *> g_pendingClips;
@@ -29,6 +35,43 @@ namespace
             reinterpret_cast<const std::byte *>(a_context.character) - 0xC0);
 
         return graph->holder;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Investigation: logs behavior graph variables + equipped objects
+// ---------------------------------------------------------------------------
+
+static void LogGraphState(const RE::PlayerCharacter *pc, const char *label, int equipId)
+{
+    if (!pc)
+        return;
+
+    const auto *r = pc->GetEquippedObject(false);
+    const auto *l = pc->GetEquippedObject(true);
+    spdlog::info("[BGState][eq={}][{}] R='{}' L='{}'",
+                 equipId, label,
+                 r ? r->GetName() : "empty",
+                 l ? l->GetName() : "empty");
+
+    static constexpr const char *kIntVars[] = {
+        "iState", "iRightHandType", "iLeftHandType",
+        "iEquippedItemTypeRight", "iEquippedItemTypeLeft",
+        "i_iSynced", "iEquipState", "iCombatState"};
+    for (auto *name : kIntVars)
+    {
+        int32_t v{};
+        if (pc->GetGraphVariableInt(name, v))
+            spdlog::info("  [int]  {} = {}", name, v);
+    }
+
+    static constexpr const char *kBoolVars[] = {
+        "bEquipOk", "IsEquipping", "bIsEquipping", "bIsInCombat", "bDrawWeapon"};
+    for (auto *name : kBoolVars)
+    {
+        bool v{};
+        if (pc->GetGraphVariableBool(name, v))
+            spdlog::info("  [bool] {} = {}", name, v ? "true" : "false");
     }
 }
 
@@ -92,6 +135,9 @@ EquipHook::EquipMode EquipHook::GetEquipMode(const RE::PlayerCharacter *a_this, 
 
 void EquipHook::OnEquipItemPC(RE::PlayerCharacter *a_this, bool a_playAnim)
 {
+    const int equipId = ++g_equipId;
+    LogGraphState(a_this, "pre", equipId);
+
     switch (GetEquipMode(a_this, a_playAnim))
     {
     case EquipMode::Skip:
@@ -110,13 +156,16 @@ void EquipHook::OnEquipItemPC(RE::PlayerCharacter *a_this, bool a_playAnim)
             delay = static_cast<int>(*g_deltaTimeRealTime * 1000.f);
 
         _OnEquipItemPC(a_this, false);
+        LogGraphState(a_this, "post-skip", equipId);
 
         if (!skip3D)
         {
-            std::jthread([=]()
+            std::jthread([=, id = equipId]()
                          {
                 std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-                SendEquipEvents(a_this, lHandObj, rHandObj); })
+                LogGraphState(a_this, "pre-events", id);
+                SendEquipEvents(a_this, lHandObj, rHandObj);
+                LogGraphState(a_this, "post-events", id); })
                 .detach();
         }
         break;
@@ -125,11 +174,13 @@ void EquipHook::OnEquipItemPC(RE::PlayerCharacter *a_this, bool a_playAnim)
     case EquipMode::InstantAnim:
     {
         _OnEquipItemPC(a_this, a_playAnim);
+        LogGraphState(a_this, "post-instant", equipId);
         break;
     }
 
     default:
         _OnEquipItemPC(a_this, a_playAnim);
+        LogGraphState(a_this, "post-normal", equipId);
         break;
     }
 }
@@ -222,4 +273,61 @@ void EquipHook::ResetState()
 {
     g_pendingClips.clear();
     g_suppressedClips.clear();
+}
+
+// ---------------------------------------------------------------------------
+// Investigation: NotifyAnimationGraph hook (Engine → BG events)
+// Hooked via VTABLE_PlayerCharacter[3] (IAnimationGraphManagerHolder) offset 0x01.
+// Only fires for PlayerCharacter instances.
+// ---------------------------------------------------------------------------
+
+bool EquipHook::NotifyAnimationGraph_Hook(RE::IAnimationGraphManagerHolder *a_this, const RE::BSFixedString &a_eventName)
+{
+    spdlog::info("[NotifyAnimationGraph→BG][eq={}] '{}'", g_equipId.load(), a_eventName.c_str());
+    return _NotifyAnimationGraph(a_this, a_eventName);
+}
+
+// ---------------------------------------------------------------------------
+// Investigation 3a: hkbStateMachine::Update hook
+// Logs every state transition in any hkbStateMachine owned by the player.
+// Fires on every BG update tick, but only logs when currentStateID changes.
+// Goal: identify which SM controls weapon/magic mode and what state IDs it uses.
+// ---------------------------------------------------------------------------
+
+void EquipHook::SM_Update_Hook(RE::hkbStateMachine *a_this, const RE::hkbContext &a_context, float a_timestep)
+{
+    spdlog::info("[SM][Update] entering hook");
+    const int32_t before = a_this ? a_this->currentStateID : -1;
+    _SM_Update(a_this, a_context, a_timestep);
+
+    if (!a_this)
+        return;
+
+    // Log ALL changes across all characters (player + NPCs).
+    // GetActorFromContext is unreliable for SM contexts (sub-behavior hkbContext may differ).
+    // Use a_context.character->name to identify the player's state machines in the log.
+    const char *charName = (a_context.character && a_context.character->name.c_str())
+                               ? a_context.character->name.c_str()
+                               : "<null>";
+
+    spdlog::info(
+        "[SM][eq={}] char='{}' smPtr={:x} smName='{}' state: {} → {}  idx={:#06x}  changed={}  time={:.4f}",
+        g_equipId.load(),
+        charName,
+        reinterpret_cast<uintptr_t>(a_this),
+        a_this->name.c_str() ? a_this->name.c_str() : "<unnamed>",
+        before,
+        a_this->currentStateID,
+        static_cast<uint32_t>(a_this->currentStateIndexAndEntered),
+        a_this->stateOrTransitionChanged ? "true" : "false",
+        a_this->timeInState);
+
+    // Extra: cross-check iState when it's the player character (by GetActorFromContext)
+    const auto *player = RE::PlayerCharacter::GetSingleton();
+    if (GetActorFromContext(a_context) == player)
+    {
+        int32_t iState = -1;
+        player->GetGraphVariableInt("iState", iState);
+        spdlog::info("  [SM][PLAYER iState] = {}", iState);
+    }
 }
