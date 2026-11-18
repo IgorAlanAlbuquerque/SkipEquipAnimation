@@ -9,7 +9,7 @@
     {
         "projectPath": "actors\\Character",
         "type": "kBool",
-        "name" "InstantEquipAnim",
+        "name": "InstantEquipAnim",
         "value": false
     },
 
