@@ -108,11 +108,10 @@ void EquipHook::OnEquipItemPC(RE::PlayerCharacter *a_this, bool a_playAnim)
 
         if (!skip3D)
         {
-            std::jthread([=]()
-                         {
+            std::jthread([=]() {
                 std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-                SendEquipEvents(a_this, lHandObj, rHandObj); })
-                .detach();
+                SendEquipEvents(a_this, lHandObj, rHandObj); 
+            }).detach();
         }
         break;
     }

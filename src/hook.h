@@ -9,10 +9,10 @@ public:
         REL::Relocation<std::uintptr_t> PlayerCharacterVtbl{RE::VTABLE_PlayerCharacter[0]};
         REL::Relocation<std::uintptr_t> hkbClipGeneratorVtbl{RE::VTABLE_hkbClipGenerator[0]};
 
-        _OnEquipItemPC        = PlayerCharacterVtbl.write_vfunc(0xB2, OnEquipItemPC);
-        _Activate             = hkbClipGeneratorVtbl.write_vfunc(0x04, Activate_Hook);
-        _Update               = hkbClipGeneratorVtbl.write_vfunc(0x05, Update_Hook);
-        _Deactivate           = hkbClipGeneratorVtbl.write_vfunc(0x07, Deactivate_Hook);
+        _OnEquipItemPC = PlayerCharacterVtbl.write_vfunc(0xB2, OnEquipItemPC);
+        _Activate = hkbClipGeneratorVtbl.write_vfunc(0x04, Activate_Hook);
+        _Update = hkbClipGeneratorVtbl.write_vfunc(0x05, Update_Hook);
+        _Deactivate = hkbClipGeneratorVtbl.write_vfunc(0x07, Deactivate_Hook);
     }
     static void ResetState();
 
@@ -31,8 +31,8 @@ private:
 
     static EquipMode GetEquipMode(const RE::PlayerCharacter *a_this, bool a_playAnim);
 
-    static inline REL::Relocation<decltype(OnEquipItemPC)>             _OnEquipItemPC;
-    static inline REL::Relocation<decltype(Activate_Hook)>             _Activate;
-    static inline REL::Relocation<decltype(Update_Hook)>               _Update;
-    static inline REL::Relocation<decltype(Deactivate_Hook)>           _Deactivate;
+    static inline REL::Relocation<decltype(OnEquipItemPC)> _OnEquipItemPC;
+    static inline REL::Relocation<decltype(Activate_Hook)> _Activate;
+    static inline REL::Relocation<decltype(Update_Hook)> _Update;
+    static inline REL::Relocation<decltype(Deactivate_Hook)> _Deactivate;
 };
