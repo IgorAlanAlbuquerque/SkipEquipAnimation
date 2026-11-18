@@ -304,7 +304,7 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
   - em `specs/001-upstream-sync-merge/spec.md`, trocar `**Status**: Draft` por `**Status**: Implemented (<data>)`;
   - marcar todas as tarefas concluídas neste `specs/001-upstream-sync-merge/tasks.md`;
   - commitar com a mensagem `docs(specs): mark upstream sync as implemented` + Co-Authored-By.
-- [ ] T038 (**adiado pelo usuário em 2026-11-17**: o main continua só local; rodar quando ele pedir) **Pedir confirmação explícita** e só então publicar o `main` no fork: `git push origin main`. É fast-forward a partir de `origin/main` = `25b0006` e **não** usa `--force`. ⛔ Se o push for rejeitado, pare. Não force.
+- [X] T038 (**adiado e depois liberado pelo usuário em 2026-11-17**; push 25b0006..6dc7c30, fast-forward) **Pedir confirmação explícita** e só então publicar o `main` no fork: `git push origin main`. É fast-forward a partir de `origin/main` = `25b0006` e **não** usa `--force`. ⛔ Se o push for rejeitado, pare. Não force.
 - [X] T039 **Pedir confirmação explícita** e só então publicar a branch de contribuição: `git push -u origin contrib/build-improvements`.
 - [X] T040 Abrir o PR. O `gh` CLI **não está instalado** neste ambiente, então:
   1. entregar ao usuário a URL de comparação `https://github.com/PhiloSocio/SkipEquipAnimation/compare/main...IgorAlanAlbuquerque:SkipEquipAnimation:contrib/build-improvements?expand=1`;
