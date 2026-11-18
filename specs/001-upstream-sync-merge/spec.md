@@ -23,6 +23,7 @@
   - `25b0006`: merge dos dois anteriores;
   - **mudanças staged e não commitadas** em `src/hook.cpp`/`src/hook.h`, que removem o logging de investigação e **corrigem um erro de compilação**: o commit `d242488` usa a variável `vtbl`, que não está declarada;
   - **arquivos staged do Spec Kit** (`.specify/`, `.claude/skills/`).
+- **Inventário validado em 2026-11-17** contra main=`d0cb5b3` (C2) e upstream/main=`22f1e3b`: os 7 conflitos foram confirmados por `git merge-tree`, e 100% dos 47 caminhos divergentes (ignorando EOL) correspondem a itens do inventário (3, 4, 5, 6, 7, 9, 11 e 12). O C1 (`35744b5`) compila: build Release com exit 0 e 0 warnings em `src/`.
 
 ## Clarifications
 

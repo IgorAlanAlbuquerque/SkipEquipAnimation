@@ -80,7 +80,7 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
   Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
   ```
   Verificar com `git show --stat HEAD`, que deve mostrar só os 2 arquivos.
-- [ ] T009 Criar o commit C2 com o tooling e as specs:
+- [X] T009 Criar o commit C2 com o tooling e as specs:
   - rodar `git add .claude/skills .specify specs`. O `.specify/feature.json` continua ignorado pelo `.specify/.gitignore`, o que é correto;
   - verificar que `git diff --cached --name-only` só contém caminhos sob `.claude/skills/`, `.specify/` e `specs/`;
   - commit com a mensagem:
@@ -93,12 +93,18 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
   Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
   ```
   Depois, `git status --porcelain=v1` precisa estar vazio.
-- [ ] T010 Build de checkpoint do C1 (research R6, gate G4):
+- [X] T010 Build de checkpoint do C1 (research R6, gate G4):
   1. **pedir confirmação ao usuário** para o deploy no MO2;
   2. rodar `cmd /c build_temp.bat`. ⛔ O exit code precisa ser 0;
   3. verificar que `build\release-msvc\SkipEquipAnimation.dll` tem `LastWriteTime` atual.
 
   Se falhar, a correção staged do `vtbl` não foi suficiente: pare e relate o erro de compilação.
+
+  > **Execução 2026-11-17**:
+  > - O usuário liberou os 3 builds (T010, T025, T033) com deploy no MO2.
+  > - A primeira tentativa falhou **antes de compilar**. O `build/release-msvc` havia sido configurado com o VS 18 em `C:\`, mas o VS agora está em `D:\`, e o cache apontava para um ninja e um linker inexistentes.
+  > - Correção: backup do cache antigo em `build/backup-pre-upstream-sync/CMakeCache.release-msvc.txt` e `cmake --preset build-release-msvc --fresh`, que levou 154 s, incluindo o rebuild das 20 dependências do vcpkg. O resultado foi exit 0, com MSVC 14.52 e o deploy continuando em `MO2/mods/Skip Equip Animations`.
+  > - T011 e T012, que são só leitura, foram adiantados durante o configure. O T013 (commit) esperou o T010.
 
 **Checkpoint**: backup completo, staged preservado em C1 e C2, e o C1 compila.
 
@@ -110,7 +116,7 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
 
 **Independent Test**: todo caminho listado em `git diff --name-only upstream/main main` corresponde a uma linha do inventário em `specs/001-upstream-sync-merge/spec.md` (seção Key Entities).
 
-- [ ] T011 [US1] Simular o merge sem alterar nada: `git merge-tree --write-tree --name-only --messages main upstream/main`. ⛔ Os arquivos em conflito precisam ser exatamente estes 7 (`src/hook.*` continuam em conflito mesmo depois do C1, porque o histórico diverge):
+- [X] T011 [US1] Simular o merge sem alterar nada: `git merge-tree --write-tree --name-only --messages main upstream/main`. ⛔ Os arquivos em conflito precisam ser exatamente estes 7 (`src/hook.*` continuam em conflito mesmo depois do C1, porque o histórico diverge):
   - `CMakePresets.json`
   - `SKSE/Plugins/BehaviorDataInjector/SkipEquipAnimation_BDI.json`
   - `src/event.cpp`
@@ -118,7 +124,7 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
   - `src/hook.cpp`
   - `src/hook.h`
   - `src/util.h`
-- [ ] T012 [P] [US1] Levantar a divergência ignorando EOL: `git diff -w --ignore-cr-at-eol --name-status upstream/main main`. Mapear cada caminho para um item do inventário, usando o número da tabela da spec:
+- [X] T012 [P] [US1] Levantar a divergência ignorando EOL: `git diff -w --ignore-cr-at-eol --name-status upstream/main main`. Mapear cada caminho para um item do inventário, usando o número da tabela da spec:
   - `src/hook.cpp` → item 3, só formatação do lambda de `std::jthread`;
   - `src/event.h` → item 4;
   - `CMakePresets.json` → item 5;
@@ -129,7 +135,7 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
   - `.claude/**`, `.specify/**` e `specs/**` → item 12.
 
   ⛔ Se algum caminho não tiver mapeamento, é uma divergência nova: pare e adicione a linha ao inventário antes de prosseguir.
-- [ ] T013 [US1] Registrar a validação em `specs/001-upstream-sync-merge/spec.md`: adicionar, ao final da seção "Contexto e diagnóstico", o bullet `- **Inventário validado em <data>** contra main=<sha do C2> e upstream/main=22f1e3b: 7 conflitos confirmados; 100% dos caminhos mapeados.` Commitar só esse arquivo com a mensagem `docs(specs): record inventory validation` + a linha Co-Authored-By.
+- [X] T013 [US1] Registrar a validação em `specs/001-upstream-sync-merge/spec.md`: adicionar, ao final da seção "Contexto e diagnóstico", o bullet `- **Inventário validado em <data>** contra main=<sha do C2> e upstream/main=22f1e3b: 7 conflitos confirmados; 100% dos caminhos mapeados.` Commitar só esse arquivo com a mensagem `docs(specs): record inventory validation` + a linha Co-Authored-By.
 
 **Checkpoint**: a análise pedida pelo usuário está comprovada contra o estado real.
 
