@@ -1,0 +1,8 @@
+/src/**                   -text
+/cmake/**                 -text
+/SKSE/**                  -text
+/CMakeLists.txt           -text
+/CMakePresets.json        -text
+/vcpkg.json               -text
+/vcpkg-configuration.json -text
+/README.md                -text
