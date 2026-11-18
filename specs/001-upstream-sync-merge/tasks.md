@@ -147,32 +147,32 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
 
 **Independent Test**: [quickstart.md](./quickstart.md) V2, V3, V4 e V5 passam.
 
-- [ ] T014 [US2] Iniciar o merge sem commit: `git merge --no-ff --no-commit upstream/main`. O exit 1 com conflitos é **esperado**. Em seguida, `git diff --name-only --diff-filter=U` precisa listar os mesmos 7 arquivos do T011.
-- [ ] T015 [US2] Adotar os blobs do upstream (CRLF) nos arquivos de conteúdo idêntico e no `hook.*`:
+- [X] T014 [US2] Iniciar o merge sem commit: `git merge --no-ff --no-commit upstream/main`. O exit 1 com conflitos é **esperado**. Em seguida, `git diff --name-only --diff-filter=U` precisa listar os mesmos 7 arquivos do T011.
+- [X] T015 [US2] Adotar os blobs do upstream (CRLF) nos arquivos de conteúdo idêntico e no `hook.*`:
   ```powershell
   git checkout upstream/main -- src/util.h src/event.cpp src/hook.cpp src/hook.h cmake/x64-windows-skse.cmake "SKSE/Plugins/BehaviorDataInjector/SkipEquipAnimation_BDI.json"
   ```
   Depois, `git diff --cached --name-only upstream/main -- src/util.h src/event.cpp src/hook.cpp src/hook.h cmake/x64-windows-skse.cmake SKSE` precisa retornar vazio.
-- [ ] T016 [US2] Manter o `CMakePresets.json` do fork (Q2 = A): `git checkout HEAD -- CMakePresets.json`. Em `git diff --cached upstream/main -- CMakePresets.json`, as únicas mudanças devem ser:
+- [X] T016 [US2] Manter o `CMakePresets.json` do fork (Q2 = A): `git checkout HEAD -- CMakePresets.json`. Em `git diff --cached upstream/main -- CMakePresets.json`, as únicas mudanças devem ser:
   - `VCPKG_TARGET_TRIPLET` e `VCPKG_HOST_TRIPLET`, de `x64-windows-static-md` para `x64-windows-skse`;
   - `VCPKG_OVERLAY_TRIPLETS: ${sourceDir}/cmake` e uma linha em branco, ambos acrescentados;
   - `"generator"`, de `Visual Studio 17 2022` para `Ninja`, nos presets Debug e Release.
-- [ ] T017 [US2] Resolver o `src/event.h` como blob do upstream menos `virtual `:
+- [X] T017 [US2] Resolver o `src/event.h` como blob do upstream menos `virtual `:
   1. rodar `git checkout upstream/main -- src/event.h`;
   2. editar `src/event.h` **preservando CRLF e BOM**. A edição é feita em bytes, via PowerShell `[IO.File]::ReadAllBytes` → substituir a sequência ASCII `virtual EventChecker ProcessEvent(` por `EventChecker ProcessEvent(` → `[IO.File]::WriteAllBytes`. Não use o editor de texto, que pode converter o EOL;
   3. rodar `git -c core.autocrlf=false add src/event.h`.
 
   ⛔ `git diff --cached --stat upstream/main -- src/event.h` precisa mostrar `1 insertion(+), 1 deletion(-)`.
-- [ ] T018 [US2] Conferir os auto-merges. `git diff --cached upstream/main -- CMakeLists.txt .gitignore` precisa mostrar só:
+- [X] T018 [US2] Conferir os auto-merges. `git diff --cached upstream/main -- CMakeLists.txt .gitignore` precisa mostrar só:
   - em `CMakeLists.txt`, o bloco acrescentado `if(MSVC) target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:/OPT:REF> $<$<CONFIG:RelWithDebInfo>:/OPT:REF>) endif()`;
   - em `.gitignore`, a remoção da linha `*.cmake`.
 
   Além disso, `git ls-files cmake/` precisa listar só `cmake/x64-windows-skse.cmake`, já que `headerlist.cmake` e `sourcelist.cmake` continuam removidos.
-- [ ] T019 [US2] Fechar a resolução:
+- [X] T019 [US2] Fechar a resolução:
   - `git diff --name-only --diff-filter=U` precisa estar vazio;
   - `git grep -nE '^(<<<<<<<|>>>>>>>)( |$)'` precisa ter exit 1;
   - ⛔ `git diff --cached --name-status upstream/main` precisa listar **só** os caminhos da tabela C-MAIN-3 de [contracts/fork-main-after-sync.md](./contracts/fork-main-after-sync.md), exceto `.gitattributes`, que ainda não existe.
-- [ ] T020 [US2] Criar o commit do merge:
+- [X] T020 [US2] Criar o commit do merge:
   ```text
   Merge upstream/main (22f1e3b) into fork main
 
@@ -188,7 +188,7 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
   Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
   ```
   Verificar que `git log -1 --format=%P` mostra 2 pais: o C2 (ou o commit do T013) e o `22f1e3b…`.
-- [ ] T021 [US2] Rodar as verificações V2 e V5 do [quickstart.md](./quickstart.md). ⛔ Todas precisam passar:
+- [X] T021 [US2] Rodar as verificações V2 e V5 do [quickstart.md](./quickstart.md). ⛔ Todas precisam passar:
   - `git merge-base --is-ancestor upstream/main main` → exit 0;
   - `git merge-base --is-ancestor backup/pre-upstream-sync main` → exit 0;
   - `git merge-tree --write-tree main upstream/main` → exit 0;
