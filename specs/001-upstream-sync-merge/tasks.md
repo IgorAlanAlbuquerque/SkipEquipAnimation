@@ -194,8 +194,8 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
   - `git merge-tree --write-tree main upstream/main` → exit 0;
   - `git grep -nE 'LogGraphState|g_equipId|NotifyAnimationGraph_Hook|SM_Update_Hook' -- src` → exit 1;
   - `git grep -n 'vtbl\.write_vfunc' -- src/hook.h` → exit 1.
-- [ ] T022 [US2] Pré-checagem de EOL antes do `.gitattributes`: rodar `git ls-files --eol src cmake SKSE CMakeLists.txt CMakePresets.json README.md vcpkg.json vcpkg-configuration.json`. ⛔ Todas as linhas precisam ter `i/crlf`. Uma linha `i/lf` aqui faria o `.gitattributes` marcar esse arquivo como modificado.
-- [ ] T023 [US2] Criar `.gitattributes` na raiz, com LF, com exatamente o conteúdo de [research.md R3](./research.md):
+- [X] T022 [US2] Pré-checagem de EOL antes do `.gitattributes`: rodar `git ls-files --eol src cmake SKSE CMakeLists.txt CMakePresets.json README.md vcpkg.json vcpkg-configuration.json`. ⛔ Todas as linhas precisam ter `i/crlf`. Uma linha `i/lf` aqui faria o `.gitattributes` marcar esse arquivo como modificado.
+- [X] T023 [US2] Criar `.gitattributes` na raiz, com LF, com exatamente o conteúdo de [research.md R3](./research.md):
   ```gitattributes
   /src/**                   -text
   /cmake/**                 -text
@@ -209,7 +209,7 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
   ⛔ `git status --porcelain=v1` precisa mostrar **só** `?? .gitattributes`. Depois:
   - rodar `git add .gitattributes`;
   - commitar com a mensagem `chore(git): store upstream-shared files as-is (CRLF) via .gitattributes` + a linha em branco + Co-Authored-By.
-- [ ] T024 [US2] Rodar as verificações finais V3 e V4 do [quickstart.md](./quickstart.md). ⛔ Tudo precisa bater:
+- [X] T024 [US2] Rodar as verificações finais V3 e V4 do [quickstart.md](./quickstart.md). ⛔ Tudo precisa bater:
   - `git diff --name-status upstream/main main` igual à tabela C-MAIN-3, agora incluindo `A .gitattributes`;
   - as contagens de `git diff --name-only upstream/main main` e `git diff --ignore-cr-at-eol --name-only upstream/main main` iguais;
   - `git ls-files --eol` com `attr/-text` nos caminhos compartilhados;
@@ -225,11 +225,13 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
 
 **Independent Test**: V6 (build) e V7 (no jogo) do [quickstart.md](./quickstart.md).
 
-- [ ] T025 [US3] Build do `main` sincronizado:
+- [X] T025 [US3] Build do `main` sincronizado:
   1. **pedir confirmação ao usuário** para o deploy no MO2;
   2. rodar `cmd /c build_temp.bat`. ⛔ O exit code precisa ser 0;
   3. confirmar que `D:\ModdingSkyrim\MO2\mods\Skip Equip Animations\SKSE\Plugins\SkipEquipAnimation.dll` tem `LastWriteTime` atual.
 - [ ] T026 [US3] Teste no jogo, manual e feito pelo usuário. Pedir que ele rode os 5 cenários da tabela V7 do [quickstart.md](./quickstart.md): skip, InstantEquipAnim, draw/sheath, magia e modo desativado. Ele deve responder OK ou FALHA para cada um. Registrar o resultado como uma linha em `specs/001-upstream-sync-merge/quickstart.md`, logo abaixo da tabela V7: `Resultado <data>: skip=…, instant=…, draw/sheath=…, magia=…, desativado=…`. ⛔ Qualquer FALHA interrompe a execução antes da US4. A restauração da DLL anterior usa os arquivos de `build\backup-pre-upstream-sync\` (T006).
+
+  > **⏸ Pausado em 2026-11-17**: o usuário escolheu "testar depois". A DLL do `main` sincronizado (`6cf8719`, 590.848 bytes, build 21:59) já está instalada no MO2. **A execução retoma aqui**: coletar o resultado dos 5 cenários antes de iniciar o T027.
 
 **Checkpoint**: o `main` sincronizado compila e foi validado no jogo.
 
@@ -255,7 +257,7 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
 - [ ] T030 [US4] Criar o commit dos cmake mortos:
   - rodar `git rm cmake/headerlist.cmake cmake/sourcelist.cmake`;
   - commitar com a mensagem `chore(cmake): remove unused headerlist/sourcelist (sources are globbed)` + Co-Authored-By.
-- [ ] T031 [US4] Commit opcional: **perguntar ao usuário** se o `.gitattributes` entra no PR. Se sim:
+- [ ] T031 [US4] Commit opcional: **perguntar ao usuário** se o `.gitattributes` entra no PR (**decidido em 2026-11-17: incluir**). Se sim:
   - rodar `git checkout main -- .gitattributes`;
   - commitar com a mensagem `chore(git): store CRLF blobs as-is via .gitattributes` + Co-Authored-By.
 - [ ] T032 [US4] Rodar as verificações V8 do [quickstart.md](./quickstart.md). ⛔ Tudo precisa bater:
@@ -267,7 +269,7 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
   2. rodar `cmd /c build_temp.bat`. ⛔ O exit code precisa ser 0.
 
   O código em `src/` é idêntico ao do `main`, então a DLL instalada continua equivalente à validada no T026.
-- [ ] T034 [P] [US4] Criar `specs/001-upstream-sync-merge/pr-description.md` com o esboço da C-PR-6 de [contracts/contribution-branch.md](./contracts/contribution-branch.md):
+- [X] T034 [P] [US4] Criar `specs/001-upstream-sync-merge/pr-description.md` com o esboço da C-PR-6 de [contracts/contribution-branch.md](./contracts/contribution-branch.md):
   - remover o bullet do `.gitattributes` se o T031 não foi feito;
   - não incluir nenhum `@login`;
   - terminar com a linha `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
