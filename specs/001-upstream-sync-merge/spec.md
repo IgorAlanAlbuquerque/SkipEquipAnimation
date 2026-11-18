@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-17
 
-**Status**: Draft
+**Status**: Implemented (2026-11-17). Fork sincronizado e branch de contribuição prontas localmente; publicação (push e PR) pendente de confirmação.
 
 **Input**: User description: "resolver conflitos entre a minha branch de fork e a branch original de PhiloSocio/SkipEquipAnimation:main - fazer uma analise de quais mudanças feitas por mim devem ser preservadas e quais devem ser substituidas por feitas por ele"
 

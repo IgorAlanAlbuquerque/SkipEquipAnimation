@@ -250,32 +250,32 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
 
 **Independent Test**: V8 do [quickstart.md](./quickstart.md).
 
-- [ ] T027 [US4] Criar a branch a partir do upstream: `git switch -c contrib/build-improvements upstream/main`. ⛔ `git rev-parse HEAD` precisa ser igual a `git rev-parse upstream/main`.
-- [ ] T028 [US4] Fazer o cherry-pick do `ba679c4` preservando o autor: `git cherry-pick -x ba679c4`. Espera-se um conflito add/add em `cmake/x64-windows-skse.cmake`, onde só o EOL difere. Resolver assim:
+- [X] T027 [US4] Criar a branch a partir do upstream: `git switch -c contrib/build-improvements upstream/main`. ⛔ `git rev-parse HEAD` precisa ser igual a `git rev-parse upstream/main`.
+- [X] T028 [US4] Fazer o cherry-pick do `ba679c4` preservando o autor: `git cherry-pick -x ba679c4`. Espera-se um conflito add/add em `cmake/x64-windows-skse.cmake`, onde só o EOL difere. Resolver assim:
   1. `git checkout HEAD -- cmake/x64-windows-skse.cmake`, que mantém o blob CRLF do upstream;
   2. se `CMakePresets.json`, `CMakeLists.txt` ou `.gitignore` também conflitarem, resolver cada um com `git checkout main -- <arquivo>`. A versão do `main` é exatamente upstream + `ba679c4`;
   3. `git cherry-pick --continue --no-edit`.
 
   ⛔ `git log -1 --format='%an'` precisa retornar `AnArchos`, e a mensagem precisa conter `(cherry picked from commit ba679c4`.
-- [ ] T029 [US4] Criar o commit do `event.h`:
+- [X] T029 [US4] Criar o commit do `event.h`:
   - rodar `git checkout main -- src/event.h`, que já é o blob do upstream menos `virtual`, em CRLF;
   - commitar com a mensagem `refactor(event): drop redundant virtual on ProcessEvent override` + Co-Authored-By;
   - ⛔ `git show --stat HEAD` precisa mostrar `1 insertion(+), 1 deletion(-)`.
-- [ ] T030 [US4] Criar o commit dos cmake mortos:
+- [X] T030 [US4] Criar o commit dos cmake mortos:
   - rodar `git rm cmake/headerlist.cmake cmake/sourcelist.cmake`;
   - commitar com a mensagem `chore(cmake): remove unused headerlist/sourcelist (sources are globbed)` + Co-Authored-By.
-- [ ] T043 [US4] **(adicionada em 2026-11-17, item 14; executar logo após o T030)** Levar a correção do BDI para a branch de contribuição:
+- [X] T043 [US4] **(adicionada em 2026-11-17, item 14; executar logo após o T030)** Levar a correção do BDI para a branch de contribuição:
   - rodar `git checkout main -- SKSE/Plugins/BehaviorDataInjector/SkipEquipAnimation_BDI.json`;
   - commitar com a mensagem `fix(bdi): add missing colon in InstantEquipAnim entry` + Co-Authored-By;
   - ⛔ `git show --stat HEAD` precisa mostrar `1 insertion(+), 1 deletion(-)`.
-- [ ] T031 [US4] Commit opcional: **perguntar ao usuário** se o `.gitattributes` entra no PR (**decidido em 2026-11-17: incluir**). Se sim:
+- [X] T031 [US4] Commit opcional: **perguntar ao usuário** se o `.gitattributes` entra no PR (**decidido em 2026-11-17: incluir**). Se sim:
   - rodar `git checkout main -- .gitattributes`;
   - commitar com a mensagem `chore(git): store CRLF blobs as-is via .gitattributes` + Co-Authored-By.
-- [ ] T032 [US4] Rodar as verificações V8 do [quickstart.md](./quickstart.md). ⛔ Tudo precisa bater:
+- [X] T032 [US4] Rodar as verificações V8 do [quickstart.md](./quickstart.md). ⛔ Tudo precisa bater:
   - `git diff --name-status upstream/main contrib/build-improvements` contém só a allowlist C-PR-2: `M .gitignore`, `M CMakeLists.txt`, `M CMakePresets.json`, `M src/event.h`, `M SKSE/Plugins/BehaviorDataInjector/SkipEquipAnimation_BDI.json`, `D cmake/headerlist.cmake`, `D cmake/sourcelist.cmake` e, se o T031 foi feito, `A .gitattributes`;
   - as contagens com e sem `--ignore-cr-at-eol` são iguais;
   - `git log --format='%h %an | %s' upstream/main..contrib/build-improvements` lista 4 commits (5 com o T031), com o primeiro de autoria AnArchos.
-- [ ] T033 [US4] Build na branch de contribuição:
+- [X] T033 [US4] Build na branch de contribuição:
   1. **pedir confirmação ao usuário** para o deploy;
   2. rodar `cmd /c build_temp.bat`. ⛔ O exit code precisa ser 0.
 
@@ -284,7 +284,7 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
   - remover o bullet do `.gitattributes` se o T031 não foi feito;
   - não incluir nenhum `@login`;
   - terminar com a linha `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
-- [ ] T035 [US4] Voltar para o `main` (`git switch main`) e commitar o `pr-description.md` com a mensagem `docs(specs): add upstream PR description` + Co-Authored-By. Depois, `git status --porcelain=v1` precisa estar vazio.
+- [X] T035 [US4] Voltar para o `main` (`git switch main`) e commitar o `pr-description.md` com a mensagem `docs(specs): add upstream PR description` + Co-Authored-By. Depois, `git status --porcelain=v1` precisa estar vazio.
 
 **Checkpoint**: a contribuição está pronta localmente e não foi publicada.
 
@@ -294,13 +294,13 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
 
 **Purpose**: publicar (FR-014), registrar o estado final e validar o rollback.
 
-- [ ] T036 Validar o rollback (SC-006) sem tocar no `main`:
+- [X] T036 Validar o rollback (SC-006) sem tocar no `main`:
   1. `git worktree add ..\SkipEquipAnimation-rollback-test backup/pre-upstream-sync`;
   2. dentro dele, `git stash apply --index backup/pre-upstream-sync-staged`;
   3. `git status --porcelain=v1` precisa mostrar o staged original: `M  src/hook.cpp`, `M  src/hook.h`, mais os arquivos de `.claude/skills/`, `.specify/` e `specs/` do momento do T005;
   4. medir o tempo total, que precisa ficar abaixo de 1 minuto;
   5. remover com `git worktree remove --force ..\SkipEquipAnimation-rollback-test`.
-- [ ] T037 Atualizar a documentação da feature:
+- [X] T037 Atualizar a documentação da feature:
   - em `specs/001-upstream-sync-merge/spec.md`, trocar `**Status**: Draft` por `**Status**: Implemented (<data>)`;
   - marcar todas as tarefas concluídas neste `specs/001-upstream-sync-merge/tasks.md`;
   - commitar com a mensagem `docs(specs): mark upstream sync as implemented` + Co-Authored-By.
