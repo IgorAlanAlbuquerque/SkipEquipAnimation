@@ -149,6 +149,7 @@ Como contribuidor, quero que as mudanças de produto que o fork tem e o upstream
 | 11 | `TASKS.md` | `d242488` (Igor) | Arquivo do fork | **Preservar (fork)** | Não | Documenta a investigação em andamento do bug arma → magia. |
 | 12 | `.claude/settings.json`, `.claude/skills/`, `.specify/`, `specs/` | Igor / Spec Kit | Ferramenta local | **Preservar (fork)** | Não | Configuração de ferramenta local. Não pertence ao produto. |
 | 13 | Funcionalidades até `e4dcb5d` (spell fix, dual-path, InstantEquipAnim, draw/sheath, frame travado, versão 1.0.6) | fork (Igor) | Conteúdo | **Já no upstream** | Não | Já fazem parte do squash `22f1e3b`. Não há ação a tomar. |
+| 14 | `SKSE/Plugins/BehaviorDataInjector/SkipEquipAnimation_BDI.json`: `"name" "InstantEquipAnim"` → `"name": "InstantEquipAnim"` | staged pelo usuário (2026-11-17 22:05). O bug existe desde `f857e9f`, nos dois lados | Conteúdo (bug fix) | **Preservar (fork)** | **Sim** | Faltava o `:`, então o JSON do repositório era inválido (a cópia instalada no MO2 já estava correta). Não apareceu como divergência porque fork e upstream tinham o mesmo erro. Encontrado depois da análise inicial. |
 
 ## Success Criteria *(mandatory)*
 
@@ -161,7 +162,7 @@ Como contribuidor, quero que as mudanças de produto que o fork tem e o upstream
 - **SC-005**: A diferença restante entre o `main` e o `upstream/main` contém só os itens classificados como "Preservar (fork)", sem nenhuma diferença só de EOL.
 - **SC-006**: O estado anterior (`main` + staged) pode ser restaurado por completo a partir do ponto de restauração em menos de 1 minuto.
 - **SC-007**: Nenhum comportamento de equip já entregue (skip, instant, draw/sheath, frame travado) regride no teste manual no jogo.
-- **SC-008**: A branch de contribuição tem 0 arquivos fora da lista de candidatos a PR (itens 4, 5, 6, 7 e 9, e opcionalmente 10) e 0 conflitos contra o `upstream/main`.
+- **SC-008**: A branch de contribuição tem 0 arquivos fora da lista de candidatos a PR (itens 4, 5, 6, 7, 9 e 14, e opcionalmente 10) e 0 conflitos contra o `upstream/main`.
 - **SC-009**: O histórico do `main` anterior à sincronização continua intacto: todos os 16 commits do fork permanecem acessíveis a partir do novo HEAD.
 
 ## Assumptions

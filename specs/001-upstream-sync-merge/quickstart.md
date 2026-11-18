@@ -79,6 +79,8 @@ Lançar o jogo pelo MO2 com o mod "Skip Equip Animations" ativo e conferir cada 
 | Equipar magia | Funciona (correção de spell) |
 | Equipar com o modo desativado | Animação vanilla normal |
 
+Resultado 2026-11-17: skip=OK, instant=OK, draw/sheath=OK, magia=OK, desativado=OK. O teste foi feito pelo usuário com a DLL do `main` sincronizado (`6cf8719`, build 21:59). O BDI JSON instalado no MO2 já estava válido.
+
 ## V8: Branch de contribuição (C-PR-1 a C-PR-5; SC-008)
 
 ```powershell

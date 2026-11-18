@@ -16,6 +16,7 @@ Invariantes da branch que será proposta ao PhiloSocio/SkipEquipAnimation (FR-01
 | M | `CMakeLists.txt` | cherry-pick de `ba679c4` |
 | M | `CMakePresets.json` | cherry-pick de `ba679c4` |
 | M | `src/event.h` | `refactor(event)` |
+| M | `SKSE/Plugins/BehaviorDataInjector/SkipEquipAnimation_BDI.json` | `fix(bdi)` (item 14) |
 | D | `cmake/headerlist.cmake` | `chore(cmake)` |
 | D | `cmake/sourcelist.cmake` | `chore(cmake)` |
 | A | `.gitattributes` | opcional |
@@ -29,9 +30,10 @@ Invariantes da branch que será proposta ao PhiloSocio/SkipEquipAnimation (FR-01
 | 1 | `Improved the new build system.` + `(cherry picked from commit ba679c4…)` | AnArchos (original, preservado) |
 | 2 | `refactor(event): drop redundant virtual on ProcessEvent override` | usuário |
 | 3 | `chore(cmake): remove unused headerlist/sourcelist (sources are globbed)` | usuário |
-| 4 (opcional) | `chore(git): keep CRLF blobs as-is via .gitattributes` | usuário |
+| 4 | `fix(bdi): add missing colon in InstantEquipAnim entry` | usuário |
+| 5 (opcional) | `chore(git): keep CRLF blobs as-is via .gitattributes` | usuário |
 
-Os commits 2 a 4 terminam com `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+Os commits 2 a 5 terminam com `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 
 ## C-PR-4: Fim de linha
 

@@ -26,6 +26,7 @@ Invariantes que o `main` precisa satisfazer ao final das fases de sincronizaçã
 | `cmake/headerlist.cmake` | removido | 9 |
 | `cmake/sourcelist.cmake` | removido | 9 |
 | `src/event.h` | 1 linha: sem `virtual ` antes de `EventChecker ProcessEvent(` | 4 |
+| `SKSE/Plugins/BehaviorDataInjector/SkipEquipAnimation_BDI.json` | 1 linha: `"name": "InstantEquipAnim"`, com o `:` que faltava | 14 |
 | `TASKS.md` | só no fork | 11 |
 | `.claude/settings.json`, `.claude/skills/**` | só no fork | 12 |
 | `.specify/**` | só no fork | 12 |
@@ -33,7 +34,7 @@ Invariantes que o `main` precisa satisfazer ao final das fases de sincronizaçã
 
 **Proibido no diff**:
 - `src/hook.cpp`, `src/hook.h`, `src/util.h`, `src/event.cpp`, `src/plugin.cpp`, `src/PCH.h`;
-- `cmake/x64-windows-skse.cmake`, `SKSE/**`, `README.md`, `vcpkg*.json`.
+- `cmake/x64-windows-skse.cmake`, `SKSE/**` (exceto a linha do item 14), `README.md`, `vcpkg*.json`.
 
 Qualquer um destes no diff indica que a resolução não seguiu o research R2.
 

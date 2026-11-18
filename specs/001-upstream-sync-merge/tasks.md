@@ -229,9 +229,16 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
   1. **pedir confirmação ao usuário** para o deploy no MO2;
   2. rodar `cmd /c build_temp.bat`. ⛔ O exit code precisa ser 0;
   3. confirmar que `D:\ModdingSkyrim\MO2\mods\Skip Equip Animations\SKSE\Plugins\SkipEquipAnimation.dll` tem `LastWriteTime` atual.
-- [ ] T026 [US3] Teste no jogo, manual e feito pelo usuário. Pedir que ele rode os 5 cenários da tabela V7 do [quickstart.md](./quickstart.md): skip, InstantEquipAnim, draw/sheath, magia e modo desativado. Ele deve responder OK ou FALHA para cada um. Registrar o resultado como uma linha em `specs/001-upstream-sync-merge/quickstart.md`, logo abaixo da tabela V7: `Resultado <data>: skip=…, instant=…, draw/sheath=…, magia=…, desativado=…`. ⛔ Qualquer FALHA interrompe a execução antes da US4. A restauração da DLL anterior usa os arquivos de `build\backup-pre-upstream-sync\` (T006).
+- [X] T026 [US3] Teste no jogo, manual e feito pelo usuário. Pedir que ele rode os 5 cenários da tabela V7 do [quickstart.md](./quickstart.md): skip, InstantEquipAnim, draw/sheath, magia e modo desativado. Ele deve responder OK ou FALHA para cada um. Registrar o resultado como uma linha em `specs/001-upstream-sync-merge/quickstart.md`, logo abaixo da tabela V7: `Resultado <data>: skip=…, instant=…, draw/sheath=…, magia=…, desativado=…`. ⛔ Qualquer FALHA interrompe a execução antes da US4. A restauração da DLL anterior usa os arquivos de `build\backup-pre-upstream-sync\` (T006).
 
   > **⏸ Pausado em 2026-11-17**: o usuário escolheu "testar depois". A DLL do `main` sincronizado (`6cf8719`, 590.848 bytes, build 21:59) já está instalada no MO2. **A execução retoma aqui**: coletar o resultado dos 5 cenários antes de iniciar o T027.
+  >
+  > **▶ Retomado em 2026-11-17**: o usuário confirmou os 5 cenários OK, e o resultado foi registrado no quickstart V7.
+
+- [X] T042 [US3] **(adicionada em 2026-11-17, item 14 do inventário; executar logo após o T026)** Commitar no `main` a correção do `SKSE/Plugins/BehaviorDataInjector/SkipEquipAnimation_BDI.json`, que foi staged pelo usuário e troca `"name" "InstantEquipAnim"` por `"name": "InstantEquipAnim"`:
+  - ⛔ `git diff --cached --stat` precisa mostrar só esse arquivo, com `1 insertion(+), 1 deletion(-)`;
+  - o JSON precisa ser válido (`ConvertFrom-Json` sem erro), e `git ls-files --eol` precisa mostrar `i/crlf attr/-text`;
+  - commitar com a mensagem `fix(bdi): add missing colon in InstantEquipAnim entry` + Co-Authored-By.
 
 **Checkpoint**: o `main` sincronizado compila e foi validado no jogo.
 
@@ -257,13 +264,17 @@ description: "Tarefas executáveis para sincronizar o fork com PhiloSocio/SkipEq
 - [ ] T030 [US4] Criar o commit dos cmake mortos:
   - rodar `git rm cmake/headerlist.cmake cmake/sourcelist.cmake`;
   - commitar com a mensagem `chore(cmake): remove unused headerlist/sourcelist (sources are globbed)` + Co-Authored-By.
+- [ ] T043 [US4] **(adicionada em 2026-11-17, item 14; executar logo após o T030)** Levar a correção do BDI para a branch de contribuição:
+  - rodar `git checkout main -- SKSE/Plugins/BehaviorDataInjector/SkipEquipAnimation_BDI.json`;
+  - commitar com a mensagem `fix(bdi): add missing colon in InstantEquipAnim entry` + Co-Authored-By;
+  - ⛔ `git show --stat HEAD` precisa mostrar `1 insertion(+), 1 deletion(-)`.
 - [ ] T031 [US4] Commit opcional: **perguntar ao usuário** se o `.gitattributes` entra no PR (**decidido em 2026-11-17: incluir**). Se sim:
   - rodar `git checkout main -- .gitattributes`;
   - commitar com a mensagem `chore(git): store CRLF blobs as-is via .gitattributes` + Co-Authored-By.
 - [ ] T032 [US4] Rodar as verificações V8 do [quickstart.md](./quickstart.md). ⛔ Tudo precisa bater:
-  - `git diff --name-status upstream/main contrib/build-improvements` contém só a allowlist C-PR-2: `M .gitignore`, `M CMakeLists.txt`, `M CMakePresets.json`, `M src/event.h`, `D cmake/headerlist.cmake`, `D cmake/sourcelist.cmake` e, se o T031 foi feito, `A .gitattributes`;
+  - `git diff --name-status upstream/main contrib/build-improvements` contém só a allowlist C-PR-2: `M .gitignore`, `M CMakeLists.txt`, `M CMakePresets.json`, `M src/event.h`, `M SKSE/Plugins/BehaviorDataInjector/SkipEquipAnimation_BDI.json`, `D cmake/headerlist.cmake`, `D cmake/sourcelist.cmake` e, se o T031 foi feito, `A .gitattributes`;
   - as contagens com e sem `--ignore-cr-at-eol` são iguais;
-  - `git log --format='%h %an | %s' upstream/main..contrib/build-improvements` lista 3 commits (4 com o T031), com o primeiro de autoria AnArchos.
+  - `git log --format='%h %an | %s' upstream/main..contrib/build-improvements` lista 4 commits (5 com o T031), com o primeiro de autoria AnArchos.
 - [ ] T033 [US4] Build na branch de contribuição:
   1. **pedir confirmação ao usuário** para o deploy;
   2. rodar `cmd /c build_temp.bat`. ⛔ O exit code precisa ser 0.
